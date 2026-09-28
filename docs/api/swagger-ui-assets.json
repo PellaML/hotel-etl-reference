@@ -1,0 +1,42 @@
+{
+  "version": "5.33.0",
+  "verified_on": "2026-09-28",
+  "release": "https://github.com/swagger-api/swagger-ui/releases/tag/v5.33.0",
+  "verification": "Each CDN file matched the official v5.33.0 tagged source byte-for-byte. SHA-384 is over the uncompressed response bytes. Assets were checked in memory, not vendored.",
+  "assets": [
+    {
+      "kind": "style",
+      "file": "swagger-ui.css",
+      "url": "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.33.0/swagger-ui.css",
+      "source": "https://raw.githubusercontent.com/swagger-api/swagger-ui/v5.33.0/dist/swagger-ui.css",
+      "bytes": 186154,
+      "integrity": "sha384-Ov4/wv3j2bmct8cDc5X4ngJZohVPzEmc6uDPH8WeljUxO5vtoykvMEfbu9Vh6RaW"
+    },
+    {
+      "kind": "script",
+      "file": "swagger-ui-bundle.js",
+      "url": "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.33.0/swagger-ui-bundle.js",
+      "source": "https://raw.githubusercontent.com/swagger-api/swagger-ui/v5.33.0/dist/swagger-ui-bundle.js",
+      "bytes": 1585988,
+      "integrity": "sha384-YDALVcy8kj8yltLBVi1vBiBAUqdxvus673gM8XKwiy6aDUJFXivF/KCufekjYbVf"
+    }
+  ],
+  "license": {
+    "spdx": "Apache-2.0",
+    "source": "https://raw.githubusercontent.com/swagger-api/swagger-ui/v5.33.0/LICENSE",
+    "bytes": 11358,
+    "sha384": "II9e1ieUDl5AxyiVq3/FflTua1Sr0kMJ25e6imG7rXg7SiAsA2VemsvEqVsLqM7/"
+  },
+  "notices": [
+    {
+      "source": "https://raw.githubusercontent.com/swagger-api/swagger-ui/v5.33.0/NOTICE",
+      "bytes": 55,
+      "sha384": "0WsY5RW2lVusdcWTnoCx5fP8TSnX2JZrr3m82bJxkn2hS3VYTh1Ar/IQSNtZJB3d"
+    },
+    {
+      "source": "https://raw.githubusercontent.com/swagger-api/swagger-ui/v5.33.0/dist/swagger-ui-bundle.js.LICENSE.txt",
+      "bytes": 4442,
+      "sha384": "jbdBF7mE+FlU+LVvcIFHKfmFVa6+46BAW94kFqC7h5BwrxYcVte1TjXqghsSPhtM"
+    }
+  ]
+}

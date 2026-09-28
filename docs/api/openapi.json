@@ -1,0 +1,630 @@
+{
+  "openapi": "3.1.0",
+  "jsonSchemaDialect": "https://spec.openapis.org/oas/3.1/dialect/base",
+  "info": {
+    "title": "Synthetic hotel fixture API",
+    "version": "0.1.0",
+    "summary": "The sample input contract for a batch ETL reference, not a hosted service.",
+    "description": "This describes hotel_etl.fixtures.fixture_api as implemented, not a vendor API or a web rewrite of the batch ETL. The context manager binds to 127.0.0.1 on an OS-assigned port and stops when the context exits. There is no persistent demo endpoint, real hotel inventory or production/cloud validation.\n\nThe examples use DEMO_HOTELS, observation_date=2026-09-27 and the page_size stated on each example. A positive integer page_size is a caller precondition; the Python helper does not validate it. Counts depend on the observation date fixed when the fixture starts, not the current wall clock.\n\nOnly GET /availability is implemented. Other authenticated GET paths return JSON 400, not 404. Missing or incorrect authentication takes precedence over GET path/query validation. Unsupported methods, including HEAD, POST and OPTIONS, use the standard-library 501 HTML response without the GET authentication check; HEAD has no response body. There are no CORS headers or preflight handler. Those unsupported methods are intentionally not advertised as operations.\n\nGeneric adapter safeguards, such as opaque cursors, int64 count validation, retries, HTTPS requirements, redirect refusal and completeness checks, belong to the client/pipeline. They are not extra fixture responses or server-side limits. See the adjacent documentation for the distinction.",
+    "license": {
+      "name": "MIT",
+      "identifier": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:{port}",
+      "description": "Template only. Replace port with the value returned by a currently running fixture_api context. Port 0 deliberately means unconfigured, not an endpoint to call. The static documentation server is a different server.",
+      "variables": {
+        "port": {
+          "default": "0",
+          "description": "OS-assigned ephemeral port from fixture_api, not the static documentation port. No fixture is running just because this document is open."
+        }
+      }
+    }
+  ],
+  "security": [
+    {
+      "fixtureBearer": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Availability",
+      "description": "Synthetic room counts over an inclusive date range."
+    }
+  ],
+  "paths": {
+    "/availability": {
+      "get": {
+        "operationId": "getFixtureAvailability",
+        "tags": [
+          "Availability"
+        ],
+        "summary": "Read one page of deterministic synthetic availability",
+        "description": "Supply one configured hotel and two inclusive dates. start_date must be no later than end_date, with (end_date - start_date).days <= 365: at most 366 included dates. Cross-parameter and calendar checks are performed by the fixture, not fully expressible in independent parameter schemas. There is no request body. Accept is not negotiated; handled responses are application/json.\n\nThe fixture regenerates the complete room-by-date list on each request, in configured room order and then ascending date order. page_size is a Python helper argument, default 128, not a query option. It emits every configured room/date pair, including zeroes, and slices that list at cursor. Keep the hotel and date range unchanged when following next_cursor; cursors are not signed or bound to a query. A cursor equal to the total returns items=[] and next_cursor=null.\n\nQueries use urllib.parse.parse_qs(strict_parsing=True) with its default blank-value removal. Required blank values act as missing; a blank cursor acts as omitted. More than one surviving value for any key, including an unknown key, is rejected. A blank occurrence plus one nonblank occurrence is accepted. Unknown singly valued parameters are ignored. Malformed key/value fields are rejected. These parser details are not stricter generic adapter promises.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/HotelId"
+          },
+          {
+            "$ref": "#/components/parameters/StartDate"
+          },
+          {
+            "$ref": "#/components/parameters/EndDate"
+          },
+          {
+            "$ref": "#/components/parameters/Cursor"
+          }
+        ],
+        "x-inclusive-day-limit": 366,
+        "x-default-page-size": 128,
+        "responses": {
+          "200": {
+            "description": "A page, including a possibly empty final page. items and next_cursor are always present. Items contain exactly room_type_id, date and available; no hotel_id, snapshot_date or observed_at fields are emitted.",
+            "headers": {
+              "Content-Length": {
+                "$ref": "#/components/headers/ContentLength"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailabilityPage"
+                },
+                "examples": {
+                  "northFirstPage": {
+                    "summary": "First page, two records and a continuation",
+                    "description": "Captured from the loopback fixture with DEMO_HOTELS, observation_date=2026-09-27, page_size=2. Query: hotel_id=DEMO_NORTH&start_date=2026-09-27&end_date=2026-09-28.",
+                    "value": {
+                      "items": [
+                        {
+                          "room_type_id": "single",
+                          "date": "2026-09-27",
+                          "available": 1
+                        },
+                        {
+                          "room_type_id": "single",
+                          "date": "2026-09-28",
+                          "available": 2
+                        }
+                      ],
+                      "next_cursor": "2"
+                    },
+                    "x-fixture-request": {
+                      "query": {
+                        "hotel_id": "DEMO_NORTH",
+                        "start_date": "2026-09-27",
+                        "end_date": "2026-09-28"
+                      },
+                      "page_size": 2,
+                      "authorized": true
+                    }
+                  },
+                  "northMiddlePage": {
+                    "summary": "Second page, cursor=2",
+                    "description": "Captured from the loopback fixture with DEMO_HOTELS, observation_date=2026-09-27, page_size=2. Query: hotel_id=DEMO_NORTH&start_date=2026-09-27&end_date=2026-09-28&cursor=2.",
+                    "value": {
+                      "items": [
+                        {
+                          "room_type_id": "double",
+                          "date": "2026-09-27",
+                          "available": 6
+                        },
+                        {
+                          "room_type_id": "double",
+                          "date": "2026-09-28",
+                          "available": 7
+                        }
+                      ],
+                      "next_cursor": "4"
+                    },
+                    "x-fixture-request": {
+                      "query": {
+                        "hotel_id": "DEMO_NORTH",
+                        "start_date": "2026-09-27",
+                        "end_date": "2026-09-28",
+                        "cursor": 2
+                      },
+                      "page_size": 2,
+                      "authorized": true
+                    }
+                  },
+                  "northLastPage": {
+                    "summary": "Last page, cursor=4",
+                    "description": "Captured from the loopback fixture with DEMO_HOTELS, observation_date=2026-09-27, page_size=2. Query: hotel_id=DEMO_NORTH&start_date=2026-09-27&end_date=2026-09-28&cursor=4.",
+                    "value": {
+                      "items": [
+                        {
+                          "room_type_id": "suite",
+                          "date": "2026-09-27",
+                          "available": 9
+                        },
+                        {
+                          "room_type_id": "suite",
+                          "date": "2026-09-28",
+                          "available": 10
+                        }
+                      ],
+                      "next_cursor": null
+                    },
+                    "x-fixture-request": {
+                      "query": {
+                        "hotel_id": "DEMO_NORTH",
+                        "start_date": "2026-09-27",
+                        "end_date": "2026-09-28",
+                        "cursor": 4
+                      },
+                      "page_size": 2,
+                      "authorized": true
+                    }
+                  },
+                  "northOneDay": {
+                    "summary": "One inclusive date with the default page size",
+                    "description": "Captured from the loopback fixture with DEMO_HOTELS, observation_date=2026-09-27, page_size=128. Query: hotel_id=DEMO_NORTH&start_date=2026-09-27&end_date=2026-09-27.",
+                    "value": {
+                      "items": [
+                        {
+                          "room_type_id": "single",
+                          "date": "2026-09-27",
+                          "available": 1
+                        },
+                        {
+                          "room_type_id": "double",
+                          "date": "2026-09-27",
+                          "available": 6
+                        },
+                        {
+                          "room_type_id": "suite",
+                          "date": "2026-09-27",
+                          "available": 9
+                        }
+                      ],
+                      "next_cursor": null
+                    },
+                    "x-fixture-request": {
+                      "query": {
+                        "hotel_id": "DEMO_NORTH",
+                        "start_date": "2026-09-27",
+                        "end_date": "2026-09-27"
+                      },
+                      "page_size": 128,
+                      "authorized": true
+                    }
+                  },
+                  "southOneDay": {
+                    "summary": "The other built-in synthetic hotel",
+                    "description": "Captured from the loopback fixture with DEMO_HOTELS, observation_date=2026-09-27, page_size=128. Query: hotel_id=DEMO_SOUTH&start_date=2026-09-27&end_date=2026-09-27.",
+                    "value": {
+                      "items": [
+                        {
+                          "room_type_id": "single",
+                          "date": "2026-09-27",
+                          "available": 9
+                        },
+                        {
+                          "room_type_id": "double",
+                          "date": "2026-09-27",
+                          "available": 2
+                        },
+                        {
+                          "room_type_id": "suite",
+                          "date": "2026-09-27",
+                          "available": 5
+                        }
+                      ],
+                      "next_cursor": null
+                    },
+                    "x-fixture-request": {
+                      "query": {
+                        "hotel_id": "DEMO_SOUTH",
+                        "start_date": "2026-09-27",
+                        "end_date": "2026-09-27"
+                      },
+                      "page_size": 128,
+                      "authorized": true
+                    }
+                  },
+                  "zeroInventory": {
+                    "summary": "Zero is an explicit, valid count",
+                    "description": "Captured from the loopback fixture with DEMO_HOTELS, observation_date=2026-09-27, page_size=128. Query: hotel_id=DEMO_NORTH&start_date=2026-09-30&end_date=2026-09-30.",
+                    "value": {
+                      "items": [
+                        {
+                          "room_type_id": "single",
+                          "date": "2026-09-30",
+                          "available": 4
+                        },
+                        {
+                          "room_type_id": "double",
+                          "date": "2026-09-30",
+                          "available": 9
+                        },
+                        {
+                          "room_type_id": "suite",
+                          "date": "2026-09-30",
+                          "available": 0
+                        }
+                      ],
+                      "next_cursor": null
+                    },
+                    "x-fixture-request": {
+                      "query": {
+                        "hotel_id": "DEMO_NORTH",
+                        "start_date": "2026-09-30",
+                        "end_date": "2026-09-30"
+                      },
+                      "page_size": 128,
+                      "authorized": true
+                    }
+                  },
+                  "exhaustedCursor": {
+                    "summary": "An offset equal to the total returns an empty final page",
+                    "description": "Captured from the loopback fixture with DEMO_HOTELS, observation_date=2026-09-27, page_size=2. Query: hotel_id=DEMO_NORTH&start_date=2026-09-27&end_date=2026-09-28&cursor=6.",
+                    "value": {
+                      "items": [],
+                      "next_cursor": null
+                    },
+                    "x-fixture-request": {
+                      "query": {
+                        "hotel_id": "DEMO_NORTH",
+                        "start_date": "2026-09-27",
+                        "end_date": "2026-09-28",
+                        "cursor": 6
+                      },
+                      "page_size": 2,
+                      "authorized": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "With valid authentication: Invalid fixture request for a wrong GET path, unknown hotel, missing/invalid dates, reversed or overlong range, malformed/duplicate query fields, a cursor that Python int() cannot parse (including interpreter conversion limits), or a negative cursor. Invalid cursor is reserved for a parsed nonnegative offset greater than the number of generated records. No 404 or 422 is substituted.",
+            "headers": {
+              "Content-Length": {
+                "$ref": "#/components/headers/ContentLength"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                },
+                "examples": {
+                  "invalidRequest": {
+                    "summary": "Unknown configured hotel",
+                    "description": "Captured from the loopback fixture with DEMO_HOTELS, observation_date=2026-09-27, page_size=128. Query: hotel_id=NOT_CONFIGURED&start_date=2026-09-27&end_date=2026-09-28.",
+                    "value": {
+                      "error": "Invalid fixture request"
+                    },
+                    "x-fixture-request": {
+                      "query": {
+                        "hotel_id": "NOT_CONFIGURED",
+                        "start_date": "2026-09-27",
+                        "end_date": "2026-09-28"
+                      },
+                      "page_size": 128,
+                      "authorized": true
+                    }
+                  },
+                  "invalidCursor": {
+                    "summary": "Offset 7 exceeds the six available records",
+                    "description": "Captured from the loopback fixture with DEMO_HOTELS, observation_date=2026-09-27, page_size=2. Query: hotel_id=DEMO_NORTH&start_date=2026-09-27&end_date=2026-09-28&cursor=7.",
+                    "value": {
+                      "error": "Invalid cursor"
+                    },
+                    "x-fixture-request": {
+                      "query": {
+                        "hotel_id": "DEMO_NORTH",
+                        "start_date": "2026-09-27",
+                        "end_date": "2026-09-28",
+                        "cursor": 7
+                      },
+                      "page_size": 2,
+                      "authorized": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or unequal Authorization value, checked before GET path/query validation. The fixture returns this JSON body without a WWW-Authenticate challenge. It does not return 403 for a different hotel.",
+            "headers": {
+              "Content-Length": {
+                "$ref": "#/components/headers/ContentLength"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                },
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Missing bearer header",
+                    "description": "Captured from the loopback fixture with DEMO_HOTELS, observation_date=2026-09-27, page_size=128. Query: hotel_id=DEMO_NORTH&start_date=2026-09-27&end_date=2026-09-28.",
+                    "value": {
+                      "error": "Unauthorized"
+                    },
+                    "x-fixture-request": {
+                      "query": {
+                        "hotel_id": "DEMO_NORTH",
+                        "start_date": "2026-09-27",
+                        "end_date": "2026-09-28"
+                      },
+                      "page_size": 128,
+                      "authorized": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "fixtureBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "The fixture compares the first parsed Authorization header value exactly to Bearer synthetic-demo-token-not-a-secret, including capital B and a single space. This public constant is DEMO_TOKEN, not a real credential, JWT or OAuth flow. Missing/wrong values return 401 even on a bad GET path/query. Duplicate Authorization headers are not independently validated, so send one header. HOTEL_API_TOKEN configures the ETL client through the CLI; it does not change the fixture token. Do not enter real credentials in this viewer."
+      }
+    },
+    "parameters": {
+      "HotelId": {
+        "name": "hotel_id",
+        "in": "query",
+        "required": true,
+        "style": "form",
+        "explode": false,
+        "description": "A hotel registered in the running fixture. DEMO_HOTELS contains DEMO_NORTH and DEMO_SOUTH, each with single, double and suite. Custom validated Hotel objects may supply other IDs. The fixture uses a dictionary lookup, not a hard-coded enum or a hotel-list endpoint.",
+        "schema": {
+          "$ref": "#/components/schemas/Identifier"
+        },
+        "examples": {
+          "north": {
+            "value": "DEMO_NORTH"
+          },
+          "south": {
+            "value": "DEMO_SOUTH"
+          }
+        }
+      },
+      "StartDate": {
+        "name": "start_date",
+        "in": "query",
+        "required": true,
+        "style": "form",
+        "explode": false,
+        "description": "Inclusive first stay date. Use YYYY-MM-DD. Existing date in years 0001-9999, no later than end_date. See FixtureDateInput for the actual parser alternatives.",
+        "schema": {
+          "$ref": "#/components/schemas/FixtureDateInput"
+        },
+        "examples": {
+          "canonical": {
+            "value": "2026-09-27"
+          },
+          "compactAccepted": {
+            "value": "20260927"
+          },
+          "weekAccepted": {
+            "value": "2026-W39-7"
+          }
+        }
+      },
+      "EndDate": {
+        "name": "end_date",
+        "in": "query",
+        "required": true,
+        "style": "form",
+        "explode": false,
+        "description": "Inclusive last stay date, from start_date through start_date + 365 days. That is 1 to 366 included dates, not a 365-date maximum. The generic pipeline defaults to 365 dates. Must be an existing supported calendar date.",
+        "schema": {
+          "$ref": "#/components/schemas/FixtureDateInput"
+        },
+        "examples": {
+          "twoDays": {
+            "value": "2026-09-28"
+          },
+          "maximumRange": {
+            "summary": "366 dates when start_date=2026-09-27",
+            "value": "2027-09-27"
+          }
+        }
+      },
+      "Cursor": {
+        "name": "cursor",
+        "in": "query",
+        "required": false,
+        "style": "form",
+        "explode": false,
+        "description": "Zero-based record offset. Omit for 0, then send the previous next_cursor as a URL-encoded query value. The parsed integer must be between 0 and configured_room_count * inclusive_day_count, inclusive; for the built-in three-room hotels the largest possible total is 1098. There is no fixed universal maximum because room configuration is a Python input. Use ordinary decimal digits. The fixture uses int(), so it also accepts leading zeroes, an encoded plus sign/whitespace, underscores between digits and other spellings accepted by Python. A raw + is query-decoded as space. It does not impose the generic adapter's 4096-character cursor limit. Python integer-conversion and standard-library HTTP parsing limits still apply. It does not accept arbitrary opaque strings. The schema describes the parsed integer, not every permissive wire spelling.",
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "examples": {
+          "firstPage": {
+            "value": 0
+          },
+          "afterTwoItems": {
+            "value": 2
+          },
+          "emptyFinalPage": {
+            "summary": "Six records for three rooms across two dates",
+            "value": 6
+          }
+        }
+      }
+    },
+    "headers": {
+      "ContentLength": {
+        "description": "Length of the UTF-8 JSON body in bytes, supplied on the fixture's handled GET responses.",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "schemas": {
+      "Identifier": {
+        "title": "Configured ASCII identifier",
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])",
+        "description": "A letter or digit followed by letters, digits, underscore, hyphen or dot. Display names are not IDs. The final assertion excludes a trailing newline as well as other extra characters.",
+        "examples": [
+          "DEMO_NORTH",
+          "suite"
+        ]
+      },
+      "CalendarDate": {
+        "type": "string",
+        "format": "date",
+        "minLength": 10,
+        "maxLength": 10,
+        "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+        "description": "An existing calendar date in YYYY-MM-DD form, years 0001 through 9999. No timestamp or timezone.",
+        "examples": [
+          "2026-09-27",
+          "2028-02-29"
+        ]
+      },
+      "FixtureDateInput": {
+        "title": "Fixture date input",
+        "description": "Use YYYY-MM-DD, which is what HttpAvailabilityClient sends. The fixture calls Python date.fromisoformat and also accepts compact calendar dates and ISO week dates. The alternative schemas describe those spellings, not a recommendation to use them. The parsed date must exist in years 0001 through 9999; regexes alone do not validate all calendar/week combinations. Responses always use YYYY-MM-DD.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/CalendarDate"
+          },
+          {
+            "title": "Compact calendar date accepted by the fixture",
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 8,
+            "pattern": "^(?!0000)[0-9]{4}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])$",
+            "description": "YYYYMMDD. The fixture also checks calendar validity, including leap years.",
+            "examples": [
+              "20260927"
+            ]
+          },
+          {
+            "title": "ISO week date accepted by the fixture",
+            "type": "string",
+            "minLength": 7,
+            "maxLength": 10,
+            "pattern": "^(?!0000)[0-9]{4}(?:-W(?:0[1-9]|[1-4][0-9]|5[0-3])(?:-[1-7])?|W(?:0[1-9]|[1-4][0-9]|5[0-3])[1-7]?)(?![\\s\\S])",
+            "description": "YYYY-Www-D or YYYYWwwD. Omitting the weekday means Monday. The week must exist in that ISO year and resolve to a supported calendar date.",
+            "examples": [
+              "2026-W39-7",
+              "2026W397",
+              "2026-W39",
+              "2026W39"
+            ]
+          }
+        ],
+        "examples": [
+          "2026-09-27",
+          "20260927",
+          "2026-W39-7"
+        ]
+      },
+      "AvailabilityItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "room_type_id",
+          "date",
+          "available"
+        ],
+        "properties": {
+          "room_type_id": {
+            "$ref": "#/components/schemas/Identifier"
+          },
+          "date": {
+            "$ref": "#/components/schemas/CalendarDate"
+          },
+          "available": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 11,
+            "description": "The fixture computes (sum(ord(c) for c in hotel_id + room_type_id) + observation_date.toordinal() + stay_date.toordinal()) % 12. Zero is meaningful. The generic adapter accepts nonnegative signed-int64 counts; this fixture only emits 0 through 11.",
+            "examples": [
+              0,
+              6,
+              11
+            ]
+          }
+        }
+      },
+      "AvailabilityPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "minItems": 0,
+            "items": {
+              "$ref": "#/components/schemas/AvailabilityItem"
+            },
+            "description": "At most the positive page_size supplied to fixture_api, default 128. No fixed maxItems is imposed here because the helper can be configured differently."
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "pattern": "^[0-9]+(?![\\s\\S])",
+            "description": "The decimal offset cursor + page_size when that offset is below the total record count; otherwise null. It is a string in responses even though the query parameter represents an integer. There is no separate count or total field.",
+            "examples": [
+              "2",
+              null
+            ]
+          }
+        }
+      },
+      "BadRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": [
+              "Invalid fixture request",
+              "Invalid cursor"
+            ]
+          }
+        }
+      },
+      "Unauthorized": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "const": "Unauthorized"
+          }
+        }
+      }
+    }
+  }
+}

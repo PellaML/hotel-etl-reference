@@ -1,0 +1,120 @@
+{
+  "scope": "Synthetic in-process source + local SQLite only; tracemalloc enabled",
+  "not_measured": [
+    "real API rate limits",
+    "BigQuery",
+    "Cloud Run",
+    "network latency"
+  ],
+  "python": "3.12.6",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "cases": [
+    {
+      "hotels": 2,
+      "rows": 2190,
+      "repetitions": 3,
+      "medians": {
+        "normalize_seconds": 0.047958,
+        "initial_write_seconds": 0.042727,
+        "identical_replay_seconds": 0.027283,
+        "total_seconds": 0.118855,
+        "peak_python_mib": 0.5045
+      },
+      "measurements": [
+        {
+          "normalize_seconds": 0.04795820004073903,
+          "initial_write_seconds": 0.04512849997263402,
+          "identical_replay_seconds": 0.027282900002319366,
+          "total_seconds": 0.12036960001569241,
+          "peak_python_mib": 0.7102451324462891
+        },
+        {
+          "normalize_seconds": 0.04582850000588223,
+          "initial_write_seconds": 0.042727300024125725,
+          "identical_replay_seconds": 0.027826600009575486,
+          "total_seconds": 0.11638240003958344,
+          "peak_python_mib": 0.5045003890991211
+        },
+        {
+          "normalize_seconds": 0.050236099981702864,
+          "initial_write_seconds": 0.04239160002907738,
+          "identical_replay_seconds": 0.02622729999711737,
+          "total_seconds": 0.11885500000789762,
+          "peak_python_mib": 0.5042619705200195
+        }
+      ]
+    },
+    {
+      "hotels": 20,
+      "rows": 21900,
+      "repetitions": 3,
+      "medians": {
+        "normalize_seconds": 0.539041,
+        "initial_write_seconds": 0.34084,
+        "identical_replay_seconds": 0.360152,
+        "total_seconds": 1.206641,
+        "peak_python_mib": 7.204259
+      },
+      "measurements": [
+        {
+          "normalize_seconds": 0.43809269997291267,
+          "initial_write_seconds": 0.34083990001818165,
+          "identical_replay_seconds": 0.3601518999785185,
+          "total_seconds": 1.1390844999696128,
+          "peak_python_mib": 7.180464744567871
+        },
+        {
+          "normalize_seconds": 0.5390405000071041,
+          "initial_write_seconds": 0.31173820002004504,
+          "identical_replay_seconds": 0.3558624999714084,
+          "total_seconds": 1.2066411999985576,
+          "peak_python_mib": 7.204258918762207
+        },
+        {
+          "normalize_seconds": 0.596089500002563,
+          "initial_write_seconds": 0.36785999999847263,
+          "identical_replay_seconds": 0.37706020002951846,
+          "total_seconds": 1.341009700030554,
+          "peak_python_mib": 7.262091636657715
+        }
+      ]
+    },
+    {
+      "hotels": 80,
+      "rows": 87600,
+      "repetitions": 3,
+      "medians": {
+        "normalize_seconds": 2.154609,
+        "initial_write_seconds": 1.206496,
+        "identical_replay_seconds": 1.272432,
+        "total_seconds": 4.660052,
+        "peak_python_mib": 24.803164
+      },
+      "measurements": [
+        {
+          "normalize_seconds": 2.1260183000122197,
+          "initial_write_seconds": 1.2064957999973558,
+          "identical_replay_seconds": 1.2337009999901056,
+          "total_seconds": 4.566215099999681,
+          "peak_python_mib": 24.8031644821167
+        },
+        {
+          "normalize_seconds": 2.1546092000207864,
+          "initial_write_seconds": 1.5723560000187717,
+          "identical_replay_seconds": 1.392181699979119,
+          "total_seconds": 5.119146900018677,
+          "peak_python_mib": 24.7968111038208
+        },
+        {
+          "normalize_seconds": 2.1933582999627106,
+          "initial_write_seconds": 1.1942617000313476,
+          "identical_replay_seconds": 1.2724324999726377,
+          "total_seconds": 4.660052499966696,
+          "peak_python_mib": 24.845099449157715
+        }
+      ]
+    }
+  ],
+  "cpu": "AMD Ryzen 7 6800H, 8 cores / 16 logical processors",
+  "note": "Non-isolated desktop; three repetitions with tracemalloc."
+}

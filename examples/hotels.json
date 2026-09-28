@@ -1,0 +1,6 @@
+{
+  "hotels": [
+    {"hotel_id": "DEMO_NORTH", "room_type_ids": ["single", "double", "suite"]},
+    {"hotel_id": "DEMO_SOUTH", "room_type_ids": ["single", "double", "suite"]}
+  ]
+}
